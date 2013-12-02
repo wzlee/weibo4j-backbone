@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>bootstrap+jquery+underscore+backbone+新浪微博+springmvc整合demo代码</title>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<link href="resource/css/bootstrap.min.css" rel="stylesheet">
+<script type="text/javascript" src="resource/js/jquery.js"></script>
+<script type="text/javascript" src="resource/js/underscore-min.js"></script>
+<script type="text/javascript" src="resource/js/backbone.js"></script>
+<style>
+	.status{
+		float:left;
+		border-bottom:1px solid #999999;
+		width:100%
+	}
+</style>
+<!-- Templates (must go before view definitions -->
+<script type="text/template" id="status-template">
+	<table>
+		<tr>
+			<td width="60px" rowspan="4"><img width="50" height="50" src="<%-user.profileImageUrl%>" alt="" title="<%-user.name%>" usercard="id=<%-user.id%>"/></td>
+		</tr>
+		<tr>
+			<td><a href="http://weibo.com/u/<%-user.id%>" target="_blank"><%-user.name%></a></td>
+		</tr>
+		<tr>
+			<td><%-text%></td><td><%-source%></td>
+		</tr>
+	</table>
+</script>
+<body>
+	<div class="container">
+		<div id="statuses">
+		</div>
+	</div>
+	<!-- backbone definitions -->
+	<script type="text/javascript">
+		window.Weibo4j = {};
+		Weibo4j.Models={};
+		Weibo4j.Views={};
+		Weibo4j.Collections={};
+		$(function() {
+			Weibo4j.Models.User = Backbone.Model.extend({});
+
+			Weibo4j.Models.Status = Backbone.Model.extend({
+			});
+
+			Weibo4j.Collections.PublicTimelineList = Backbone.Collection.extend({
+				model : Weibo4j.Models.Status,
+				url : '/statuses/public_timeline.htm'
+			});
+
+			Weibo4j.Views.StatusView = Backbone.View.extend({
+				tagName : "div",
+				className : "status",
+				template : _.template($('#status-template').html()),
+				render : function() {
+					$(this.el).html(this.template(this.model.toJSON()));
+					return this;
+				},
+			});
+
+			Weibo4j.Views.StatusesView = Backbone.View.extend({
+				el : $("#statuses"),
+				initialize : function() {
+					this.statuses = new Weibo4j.Collections.PublicTimelineList();
+					this.statuses.bind("all", this.render, this);
+					this.statuses.fetch();
+				},
+				render : function() {
+					this.statuses.each(function(status) {
+						var statusView = new Weibo4j.Views.StatusView({
+							model : status
+						});
+						$("#statuses").append(statusView.render().el);
+					});
+				}
+			});
+
+			new Weibo4j.Views.StatusesView();
+		});
+	</script>
+</body>
+</html>
